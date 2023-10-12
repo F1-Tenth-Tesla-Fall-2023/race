@@ -1,4 +1,4 @@
-# assignment-2
+# Assignment 2
 Code that contains our PID wall following and completed skelton code of the race package.
 
 ## Set-up
