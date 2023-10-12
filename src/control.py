@@ -31,6 +31,7 @@ def control(data):
 	global kp
 	global kd
 	global angle
+	angle = 0.0
 
 	print("PID Control Node is Listening to error")
 
