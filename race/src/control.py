@@ -2,7 +2,7 @@
 import math
 import rospy
 from race.msg import pid_input
-from ackermann_msgs.msg import AckermannDrive
+from ackermann_msgs.msg import AckermannDrive, AckermannDriveStamped
 
 # This code can input desired velocity from the user.
 # velocity must be between [0,100] to move forward.
@@ -14,7 +14,8 @@ from ackermann_msgs.msg import AckermannDrive
 
 # Publisher for moving the car.
 # TODO: Use the coorect topic /car_x/offboard/command. The multiplexer listens to this topic
-command_pub = rospy.Publisher('/car_8/offboard/command', AckermannDrive, queue_size = 1)
+# command_pub = rospy.Publisher('/car_8/offboard/command', AckermannDrive, queue_size = 1)
+command_pub = rospy.Publisher('/car_8/offboard/command', AckermannDriveStamped, queue_size = 1)
 
 def control(data):
 	global prev_error
@@ -47,6 +48,7 @@ def control(data):
 	angle = proportional + integral + derivative
 
 	# An empty AckermannDrive message is created. You will populate the steering_angle and the speed fields.
+	commandStamp = AckermannDriveStamped()
 	command = AckermannDrive()
 
 	# TODO: Make sure the steering value is within bounds [-100,100]
@@ -59,7 +61,8 @@ def control(data):
 	command.speed = vel_input
 
 	# Move the car autonomously
-	command_pub.publish(command)
+	commandStamp.drive = command
+	command_pub.publish(commandStamp)
 
 	# Update the previous error for the next iteration
         prev_error = error
