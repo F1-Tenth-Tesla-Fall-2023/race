@@ -63,7 +63,7 @@ def control(data):
 	command_pub.publish(command)
 
 	# Update the previous error for the next iteration
-    prev_error = error
+	prev_error = error
 
 if __name__ == '__main__':
 
