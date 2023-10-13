@@ -10,6 +10,7 @@ kd = 0.0 #TODO
 ki = 0.0 #TODO
 servo_offset = 0.0	# zero correction offset in case servo is misaligned and has a bias in turning.
 prev_error = 0.0
+angle = 0.0
 
 
 # This code can input desired velocity from the user.
@@ -31,7 +32,6 @@ def control(data):
 	global kp
 	global kd
 	global angle
-	angle = 0.0
 
 	print("PID Control Node is Listening to error")
 
