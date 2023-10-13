@@ -30,18 +30,19 @@ def getRange(data,angle):
     ranges = data.ranges
     # Calculate the index corresponding to the specified angle
     # Convert angle to radians
-    angle_rad = math.radians(angle)
+    angle_rad = math.radians(angle) - (math.pi / 2)
     # Angle withn valid range
-    if angle_rad < angle_min:
-        angle_rad = angle_min
-    elif angle_rad > angle_max:
-        angle_rad = angle_max
+    #if angle_rad < angle_min:
+    #    angle_rad = angle_min
+    #elif angle_rad > angle_max:
+    #    angle_rad = angle_max
     # Calculate the index for the specified angle
     index = int((angle_rad - angle_min) / angle_increment)
     # Check for NaN values and return a default
     if math.isnan(ranges[index]):
         return 0.0
     # Return the range value for the specified angle
+    #print(ranges[index])
     return ranges[index]
 
 
@@ -50,7 +51,9 @@ def callback(data):
 	global forward_projection
 
 	theta = 50 # you need to try different values for theta
+        #print("A distance")
 	a = getRange(data,theta) # obtain the ray distance for theta
+        #print("B distance")
 	b = getRange(data,0)	# obtain the ray distance for 0 degrees (i.e. directly to the right of the car)
 	swing = math.radians(theta)
 
@@ -58,13 +61,13 @@ def callback(data):
 	# Compute Alpha, AB, and CD..and finally the error.
 	# TODO: implement
 	# Calculate Alpha (right wall)
-    alpha = math.atan2((a * math.cos(swing) - b), (a * math.sin(swing)))
+        alpha = math.atan2((a * math.cos(swing) - b), (a * math.sin(swing)))
     # Calculate distance AB from the right wall
-    AB = b * math.cos(alpha)
+        AB = b * math.cos(alpha)
     # Calculate the projected distance from the wall (CD)
-    CD = AB + forward_projection * math.sin(alpha)
+        CD = AB + forward_projection * math.sin(alpha)
     # Calculate the error as the difference between the desired_distance and CD
-    error = desired_distance - CD
+        error = desired_distance - CD
 
 	msg = pid_input()	# An empty msg is created of the type pid_input
 	# this is the error that you want to send to the PID for steering correction.
