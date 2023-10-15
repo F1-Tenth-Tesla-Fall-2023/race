@@ -21,17 +21,17 @@ def control(data):
 	global vel_input
 	global kp
 	global kd
-        global error
-        global start_time
-        integral = 0.0
-        error = 0.0
-        prev_error = 0.0
+	global error
+	global start_time
+	integral = 0.0
+	error = 0.0
+	prev_error = 0.0
 	global angle
 	angle = 0.0
 	print("PID Control Node is Listening to error")
-        dt = rospy.Time.now()-start_time
-        start_time = rospy.Time.now()
-        dt = dt.to_sec()
+	dt = rospy.Time.now()-start_time
+	start_time = rospy.Time.now()
+	dt = dt.to_sec()
 
 	## Your PID code goes here
 	#TODO: Use kp, ki & kd to implement a PID controller
@@ -55,14 +55,18 @@ def control(data):
 	command.steering_angle = angle
 
 	# TODO: Make sure the velocity is within bounds [0,100]
-	vel_input = max(min(vel_input, 100), 0)
+	max_vel = 40
+	min_vel = 15
+	a = 10 # Aggresiveness of sigmoid
+	b = -5 # Shift of sigmoid
+	vel_input = max_vel / (1 + math.exp(a* math.abs(error) + b)) # https://www.desmos.com/calculator/qsmruodqgh
 	command.speed = vel_input
 
 	# Move the car autonomously
 	command_pub.publish(command)
 
 	# Update the previous error for the next iteration
-        prev_error = error
+	prev_error = error
 
 if __name__ == '__main__':
 
@@ -71,13 +75,13 @@ if __name__ == '__main__':
 	global kd
 	global ki
 	global vel_input
-        global start_time
+	global start_time
 	kp = input("Enter Kp Value: ")
 	kd = input("Enter Kd Value: ")
 	ki = input("Enter Ki Value: ")
 	vel_input = input("Enter desired velocity: ")
 	rospy.init_node('pid_controller', anonymous=True)
     # subscribe to the error topic
-        start_time = rospy.Time.now()
+	start_time = rospy.Time.now()
 	rospy.Subscriber("error", pid_input, control)
 	rospy.spin()
