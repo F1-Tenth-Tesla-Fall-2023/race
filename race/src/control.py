@@ -23,10 +23,10 @@ def control(data):
 	global kd
 	global error
 	global start_time
+	global angle
 	integral = 0.0
 	error = 0.0
 	prev_error = 0.0
-	global angle
 	angle = 0.0
 	print("PID Control Node is Listening to error")
 	dt = rospy.Time.now()-start_time
@@ -59,7 +59,7 @@ def control(data):
 	min_vel = 15
 	a = 10 # Aggresiveness of sigmoid
 	b = -5 # Shift of sigmoid
-	vel_input = max_vel / (1 + math.exp(a* math.abs(error) + b)) # https://www.desmos.com/calculator/qsmruodqgh
+	vel_input = max_vel / (1 + math.exp(a * math.abs(error) + b)) # https://www.desmos.com/calculator/qsmruodqgh
 	command.speed = vel_input
 
 	# Move the car autonomously
