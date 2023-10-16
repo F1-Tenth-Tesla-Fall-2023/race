@@ -55,7 +55,7 @@ def control(data):
 	command.steering_angle = angle
 
 	# TODO: Dynamic Velocity Scaling
-  vel_range = 10
+  	vel_range = 10
 	max_vel = vel_input + vel_range
 	min_vel = vel_input - vel_range
 	a = 10 # Aggresiveness of sigmoid
