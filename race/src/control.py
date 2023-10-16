@@ -54,12 +54,15 @@ def control(data):
         #angle *= 5
 	command.steering_angle = angle
 
-	# TODO: Make sure the velocity is within bounds [0,100]
-	max_vel = 40
-	min_vel = 15
+	# TODO: Dynamic Velocity Scaling
+	max_vel = vel_input + 10
+	min_vel = vel_input - 10
 	a = 10 # Aggresiveness of sigmoid
 	b = -5 # Shift of sigmoid
-	vel_input = max_vel / (1 + math.exp(a* math.abs(error) + b)) # https://www.desmos.com/calculator/qsmruodqgh
+	vel_input = (max_vel - min_vel) / (1 + math.exp(a * math.abs(error) + b)) + min_vel # https://www.desmos.com/calculator/ppbv9va1tt
+	
+	# TODO: Make sure the velocity is within bounds [0,100]
+	vel_input = max(min(vel_input, 100), 0) 
 	command.speed = vel_input
 
 	# Move the car autonomously
