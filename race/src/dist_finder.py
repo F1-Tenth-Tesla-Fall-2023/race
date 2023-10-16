@@ -65,7 +65,7 @@ def callback(data):
     # Calculate distance AB from the right wall
         AB = b * math.cos(alpha)
     # Calculate the projected distance from the wall (CD)
-        CD = AB + forward_projection * math.sin(alpha)
+        CD = AB + car_length + forward_projection * math.sin(alpha)
     # Calculate the error as the difference between the desired_distance and CD
         error = desired_distance - CD
 
