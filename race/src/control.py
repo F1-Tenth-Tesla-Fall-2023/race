@@ -60,7 +60,7 @@ def control(data):
 	min_vel = vel_input - vel_range
 	a = 10 # Aggresiveness of sigmoid
 	b = -5 # Shift of sigmoid
-	vel_input = (max_vel - min_vel) / (1 + math.exp(a * math.abs(error) + b)) + min_vel # https://www.desmos.com/calculator/ppbv9va1tt
+	vel_input = (max_vel - min_vel) / (1 + math.exp(a * abs(error) + b)) + min_vel # https://www.desmos.com/calculator/ppbv9va1tt
 	
 	# TODO: Make sure the velocity is within bounds [0,100]
 	vel_input = max(min(vel_input, 100), 0)
