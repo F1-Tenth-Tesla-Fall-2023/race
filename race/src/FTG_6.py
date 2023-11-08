@@ -31,7 +31,7 @@ def calculateSamplesToCoverHalfCarWidth(distance1, distance2, car_width, angle_i
     span_per_increment = math.sin(angle_increment) * distance1 + math.sin(angle_increment) * distance2
 
     # Calculate the number of samples required to cover half the car's width plus a tolerance
-    num_samples = ((car_width / 2 ) * (1 + tolerance)) / span_per_increment
+    num_samples = ((car_width / 2 ) / span_per_increment) + (tolerance * 2)
 
     # Return the ceiling of num_samples because we can't have a fraction of a sample and we need at least this many
     return int(math.ceil(num_samples))
@@ -97,11 +97,19 @@ def pickGap(data):
     	index_min = int((np.radians(-90) - data.angle_min) / data.angle_increment)
 		
     if data.angle_max < np.radians(90):
-	index_max = len(data.ranges) - 1
+		index_max = len(data.ranges) - 1
     else:
     	index_max = int((np.radians(90) - data.angle_min) / data.angle_increment)
-	
     
+	# Make bubble around closest point
+	closest = min(data.ranges[index_min:index_max])
+	bubble_ind = data.ranges.index(closest)
+	bubble_left = max(index_min, bubble_ind - tolerance)
+	bubble_right = min(index_max, bubble_ind + tolerance)
+	
+	for b in range(bubble_left, bubble_right + 1):
+		data.ranges[b] = 0
+		
     # Calculate the deepest gap and its index
     max_dist = max(data.ranges[index_min:index_max])    
     max_ind = data.ranges.index(max_dist)
@@ -109,22 +117,22 @@ def pickGap(data):
     # Return the appropriate angle
     # if gap deeper than limit threshold, find center of gap
     if max_dist > limit_threshold:
-	i = max_ind
-	j = max_ind
-	# index of left corner of gap
-	gap_left = 0
-	# index of right corner of gap
-	gap_right = 0
-	while data.ranges[i] != 0 or data.ranges[j] != 0:
-	    i = i - 1
-	    j = j + 1
-	    if data.ranges[i] == 0 and gap_left == 0:
-		gap_left = i
-	    if data.ranges[j] == 0 and gap_right == 0:
-		gap_right = j
-
-	gap_width = gap_right - gap_left
-	max_ind = np.floor(gap_left + (gap_width/2))
+		i = max_ind
+		j = max_ind
+		# index of left corner of gap
+		gap_left = 0
+		# index of right corner of gap
+		gap_right = 0
+		while data.ranges[i] != 0 or data.ranges[j] != 0:
+		    i = i - 1
+		    j = j + 1
+		    if data.ranges[i] == 0 and gap_left == 0:
+			gap_left = i
+		    if data.ranges[j] == 0 and gap_right == 0:
+			gap_right = j
+	
+		gap_width = gap_right - gap_left
+		max_ind = np.floor(gap_left + (gap_width/2))
 
     angle = (max_ind * data.angle_increment + data.angle_min) * 180.0/np.pi
 
@@ -184,7 +192,7 @@ if __name__ == '__main__':
     car_width = 0.2
     threshold = 0.1
     limit_threshold = 2.0
-    tolerance = 0.75
+    tolerance = 4
 
     rospy.init_node('ftg', anonymous = True)
     rospy.Subscriber("/car_8/scan", LaserScan, callback)
