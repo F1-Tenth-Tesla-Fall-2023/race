@@ -20,10 +20,10 @@ def calculateSamplesToCoverHalfCarWidth(distance1, distance2, car_width, angle_i
 
     # Calculate the span across the car that each lidar sample covers
     # Adding the spans across the car width due to two consecutive readings
-    span_per_increment = math.sin(angle_increment) * (distance1 + distance2)
+    span_per_increment = math.sin(angle_increment) * distance1 + math.sin(angle_increment) * distance2
 
     # Calculate the number of samples required to cover half the car's width plus a tolerance
-    num_samples = (car_width / 2) * (1 + tolerance) / span_per_increment
+    num_samples = (car_width / 2 * (1 + tolerance)) / span_per_increment
 
     # Return the ceiling of num_samples because we can't have a fraction of a sample and we need at least this many
     return int(math.ceil(num_samples))
