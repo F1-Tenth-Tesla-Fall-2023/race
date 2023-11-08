@@ -91,45 +91,41 @@ def pickGap(data):
 	
 	# Define the indexing range for -90 to 90 degrees
 	
-	if data.angle_min > np.radians(-90):
-	    index_min = 0
-	else:
+    if data.angle_min > np.radians(-90):
+    	index_min = 0
+    else:
     	index_min = int((np.radians(-90) - data.angle_min) / data.angle_increment)
-
-	if data.angle_max < np.radians(90):
-		index_max = len(data.ranges) - 1
-	else:
+		
+    if data.angle_max < np.radians(90):
+	index_max = len(data.ranges) - 1
+    else:
     	index_max = int((np.radians(90) - data.angle_min) / data.angle_increment)
 	
     
-	# Calculate the deepest gap and its index
-	max_dist = max(data.ranges[index_min:index_max])    
-	max_ind = data.ranges.index(max_dist)
+    # Calculate the deepest gap and its index
+    max_dist = max(data.ranges[index_min:index_max])    
+    max_ind = data.ranges.index(max_dist)
 	
-
-	# Return the appropriate angle
-	# if gap deeper than limit threshold, find center of gap
+    # Return the appropriate angle
+    # if gap deeper than limit threshold, find center of gap
     if max_dist > limit_threshold:
-        angle = (max_gap_center * data.angle_increment + data.angle_min) * 180.0/np.pi
-		i = max_ind
-		j = max_ind
-		# index of left corner of gap
-		gap_left = 0
-		# index of right corner of gap
-		gap_right = 0
+	i = max_ind
+	j = max_ind
+	# index of left corner of gap
+	gap_left = 0
+	# index of right corner of gap
+	gap_right = 0
+	while data.ranges[i] != 0 or data.ranges[j] != 0:
+	    i = i - 1
+	    j = j + 1
+	    if data.ranges[i] == 0 and gap_left == 0:
+		gap_left = i
+	    if data.ranges[j] == 0 and gap_right == 0:
+		gap_right = j
 
-		while data.ranges[i] != 0 or data.ranges[j] != 0:
-			i = i - 1
-			j = j + 1
-			if data.ranges[i] == 0 and gap_left == 0:
-				gap_left = i
-			if data.ranges[j] == 0 and gap_right == 0:
-				gap_right = j
+	gap_width = gap_right - gap_left
+	max_ind = np.floor(gap_left + (gap_width/2))
 
-		gap_width = gap_right - gap_left
-		max_ind = np.floor(gap_left + (gap_width/2))
-
-    
     angle = (max_ind * data.angle_increment + data.angle_min) * 180.0/np.pi
 
     return angle
