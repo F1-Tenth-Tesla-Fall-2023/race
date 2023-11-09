@@ -13,6 +13,8 @@ global tolerance # tolerance for the number of samples to cover half the car wid
 command_pub = rospy.Publisher('/car_8/offboard/command', AckermannDrive, queue_size = 1)
 
 disparity_pub = rospy.Publisher('/car_8/disparity', LaserScan, queue_size = 1)
+gap_pub = rospy.Publisher('/car_8/gap', LaserScan, queue_size = 1)
+bubble_pub = rospy.Publisher('/car_8/bubble', LaserScan, queue_size = 1)
 
 def calculateSamplesToCoverHalfCarWidth(distance1, distance2, car_width, angle_increment):
 
@@ -176,7 +178,8 @@ def callback(data):
     postBubbleScan = data
     postBubbleScan.ranges = postBubble
     # publish disparity scan for rviz
-    disparity_pub.publish(postBubbleScan)
+    disparity_pub.publish(new_scan)
+    bubble_pub.publish(postBubbleScan)
 
 
     # Step 2 - Pick the largest gap in the scan, between -90 and 90 degrees
