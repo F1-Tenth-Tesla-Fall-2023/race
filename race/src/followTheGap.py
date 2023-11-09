@@ -44,10 +44,10 @@ def extendDisparities(data):
     for i in range(n - 1):
 
         # dismiss if either of the points are inf, or less than car_width
-        if np.isinf(ranges[i]) or np.isnan(ranges[i]:
+        if np.isinf(ranges[i]) or np.isnan(ranges[i]):
             new_ranges[i] = 0
             continue
-        if np.isinf(ranges[i + 1]) or np.isnan(ranges[i+1]:
+        if np.isinf(ranges[i + 1]) or np.isnan(ranges[i+1]):
             new_ranges[i + 1] = 0
             continue
         
@@ -186,15 +186,15 @@ def callback(data):
 
     global car_width
     global threshold 
-    print("lidar ranges", data.ranges[126:226])
+    # print("lidar ranges", data.ranges[126:226])
     
     # Step 1 - Find disparities in the scan
     ranges = extendDisparities(data)
-    print("disparities ranges", ranges[126:226])
+    # print("disparities ranges", ranges[126:226])
     new_scan = data
     new_scan.ranges = ranges
     postBubble = createBubble(new_scan)
-    print("bubble ranges", postBubble[126:226])
+    # print("bubble ranges", postBubble[126:226])
     postBubbleScan = data
     postBubbleScan.ranges = postBubble
     # publish disparity scan for rviz
