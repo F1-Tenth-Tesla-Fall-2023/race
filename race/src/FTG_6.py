@@ -124,12 +124,14 @@ def pickGap(data):
 		# index of right corner of gap
 		gap_right = 0
 		while data.ranges[i] != 0 or data.ranges[j] != 0:
-		    i = i - 1
-		    j = j + 1
 		    if data.ranges[i] == 0 and gap_left == 0:
-			gap_left = i
+				gap_left = i
+            else:
+            	i = i - 1
 		    if data.ranges[j] == 0 and gap_right == 0:
-			gap_right = j
+				gap_right = j
+        	else:
+            	 j = j + 1
 	
 		gap_width = gap_right - gap_left
 		max_ind = np.floor(gap_left + (gap_width/2))
