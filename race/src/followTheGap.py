@@ -127,6 +127,7 @@ def pickGap(data):
     index_min = int((np.radians(-90) - data.angle_min) / data.angle_increment)
     index_max = int((np.radians(90) - data.angle_min) / data.angle_increment)
     forwardRanges = data.ranges[index_min:index_max]
+    
 
      # Calculate the max gap and its deepest point
     bestGap = findBestGap(forwardRanges, data.angle_increment)
@@ -136,7 +137,7 @@ def pickGap(data):
     max_gap = data.ranges[maxGapIndex]
 
     # Return the appropriate angle
-    if max_gap > limit_threshold:
+    if max_gap < limit_threshold:
         angle = (maxGapIndex * data.angle_increment + data.angle_min) * 180.0/np.pi
     else:
         deepest_direction_point = data.ranges.index(max(data.ranges))
@@ -168,12 +169,15 @@ def callback(data):
 
     global car_width
     global threshold 
+    print("lidar ranges", data.ranges[126:226])
     
     # Step 1 - Find disparities in the scan
     ranges = extendDisparities(data)
+    print("disparities ranges", ranges[126:226])
     new_scan = data
     new_scan.ranges = ranges
     postBubble = createBubble(new_scan)
+    print("bubble ranges", postBubble[126:226])
     postBubbleScan = data
     postBubbleScan.ranges = postBubble
     # publish disparity scan for rviz
