@@ -106,14 +106,16 @@ def findBestGap(ranges, angle_inc):
             if ranges[l+1] > 0:
             	neededSamples =  int(abs(math.atan((car_width / 2.0) / ranges[l + 1]))/angle_inc)
             	if r-l >= neededSamples:
-                	gaps.append(ranges[l:r])
+                	gaps.append((ranges[l:r], l, r))
             l=r+1
             r=l+1
         else:
             r+=1
 
     #returns the gap with the largest distance
-    return(sorted(gaps, key=max, reverse=True)[0])
+    gap_list = sorted(gaps, key=lambda x:max(x[0]), reverse=True)[0]
+
+    return gap_list[1], gap_list[2]
 
     #returns the widest gap
     #return(sorted(gaps, key=len, reverse=True)[0])
@@ -130,18 +132,33 @@ def pickGap(data):
     
 
      # Calculate the max gap and its deepest point
-    bestGap = findBestGap(forwardRanges, data.angle_increment)
-    startOfBestGap = data.ranges.index(bestGap[0])
-    indexInBestGap =  bestGap.index(max(bestGap))
-    maxGapIndex = startOfBestGap+indexInBestGap
-    max_gap = data.ranges[maxGapIndex]
+    l, r = findBestGap(forwardRanges, data.angle_increment)
+    # startOfBestGap = data.ranges.index(bestGap[0])
+    # indexInBestGap =  bestGap.index(max(bestGap))
+    # maxGapIndex = startOfBestGap+indexInBestGap
+    # max_gap = data.ranges[l + index_min:r + index_min]
+
+    max_gap = -1
+    # maxGapIndex = data.ranges.index(max_gap)
+
+    maxGapIndex = -1
+
+    for i in range(l + index_min, r + index_min):
+        value = data.ranges[i]
+        if value > max_gap:
+            maxGapIndex = i
+            max_gap = value
+
+    if maxGapIndex == -1 or max_gap == -1:
+        return 0
 
     # Return the appropriate angle
-    if max_gap < limit_threshold:
-        angle = (maxGapIndex * data.angle_increment + data.angle_min) * 180.0/np.pi
-    else:
-        deepest_direction_point = data.ranges.index(max(data.ranges))
-        angle = (deepest_direction_point * data.angle_increment + data.angle_min) * 180.0/np.pi
+    # if max_gap < limit_threshold:
+    #     angle = (maxGapIndex * data.angle_increment + data.angle_min) * 180.0/np.pi
+    # else:
+    #     deepest_direction_point = data.ranges.index(max(data.ranges))
+    #     angle = (deepest_direction_point * data.angle_increment + data.angle_min) * 180.0/np.pi
+    angle = (maxGapIndex * data.angle_increment + data.angle_min) * 180.0/np.pi
 
     return angle
 
