@@ -13,7 +13,6 @@ global tolerance # tolerance for the number of samples to cover half the car wid
 command_pub = rospy.Publisher('/car_8/offboard/command', AckermannDrive, queue_size = 1)
 
 disparity_pub = rospy.Publisher('/car_8/disparity', LaserScan, queue_size = 1)
-gap_pub = rospy.Publisher('/car_8/gap', LaserScan, queue_size = 1)
 bubble_pub = rospy.Publisher('/car_8/bubble', LaserScan, queue_size = 1)
 
 def calculateSamplesToCoverHalfCarWidth(distance1, distance2, car_width, angle_increment):
