@@ -43,10 +43,10 @@ def extendDisparities(data):
     for i in range(n - 1):
 
         # dismiss if either of the points are inf, or less than car_width
-        if np.isinf(ranges[i]):
+        if np.isinf(ranges[i]) or np.isnan(ranges[i]:
             new_ranges[i] = 0
             continue
-        if np.isinf(ranges[i + 1]):
+        if np.isinf(ranges[i + 1]) or np.isnan(ranges[i+1]:
             new_ranges[i + 1] = 0
             continue
         
@@ -78,7 +78,7 @@ def extendDisparities(data):
     return new_ranges
 
 def createBubble(scans):
-    ranges = list(scans)
+    ranges = list(scans.ranges)
     n = len(ranges)
     index = 0
     close_distance = 9999
@@ -89,6 +89,7 @@ def createBubble(scans):
     bubble_index_offset = int(math.degrees(math.atan(car_width / close_distance))) * (1.0 / math.degrees(scans.angle_increment))
     for i in range(int(max(0, index - bubble_index_offset)), int(min(index + bubble_index_offset, len(ranges)))):
         ranges[i] = 0.0 
+    return ranges
 
 def findBestGap(ranges, angle_inc):
     gap_threshold = 1.0
@@ -101,9 +102,10 @@ def findBestGap(ranges, angle_inc):
             l+=1
             r=l+1
         elif ranges[r]<gap_threshold:
-            neededSamples =  int(abs(math.atan((car_width / 2.0) / ranges[l + 1]))/angle_inc)
-            if r-l >= neededSamples:
-                gaps.append(ranges[l:r])
+            if ranges[l+1] > 0:
+            	neededSamples =  int(abs(math.atan((car_width / 2.0) / ranges[l + 1]))/angle_inc)
+            	if r-l >= neededSamples:
+                	gaps.append(ranges[l:r])
             l=r+1
             r=l+1
         else:
