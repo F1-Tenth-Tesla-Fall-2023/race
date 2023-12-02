@@ -1,0 +1,183 @@
+#!/usr/bin/env python
+
+# Import necessary libraries
+import rospy
+import os
+import sys
+import csv
+import math
+from ackermann_msgs.msg import AckermannDrive
+from geometry_msgs.msg import PolygonStamped
+from geometry_msgs.msg import Point32
+from geometry_msgs.msg import PoseStamped
+import tf
+
+# Global variables for storing the path, path resolution, frame ID, and car details
+plan                = []
+path_resolution     = []
+frame_id            = 'map'
+car_name            = str(sys.argv[1])
+trajectory_name     = str(sys.argv[2])
+
+# Publishers for sending driving commands and visualizing the control polygon
+command_pub         = rospy.Publisher('/{}/offboard/command'.format(car_name), AckermannDrive, queue_size = 1)
+polygon_pub         = rospy.Publisher('/{}/purepursuit_control/visualize'.format(car_name), PolygonStamped, queue_size = 1)
+
+# Global variables for waypoint sequence and current polygon
+global wp_seq
+global curr_polygon
+
+wp_seq = 0
+control_polygon = PolygonStamped()
+
+def construct_path():
+    # Function to construct the path from a CSV file
+    # TODO: Modify this path to match the folder where the csv file containing the path is located.
+    file_path = os.path.expanduser('/path/to/your/csv/file/{}.csv'.format(trajectory_name))
+    with open(file_path) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for waypoint in csv_reader:
+            plan.append(waypoint)
+
+    # Convert string coordinates to floats and calculate path resolution
+    for index in range(0, len(plan)):
+        for point in range(0, len(plan[index])):
+            plan[index][point] = float(plan[index][point])
+
+    for index in range(1, len(plan)):
+        dx = plan[index][0] - plan[index-1][0]
+        dy = plan[index][1] - plan[index-1][1]
+        path_resolution.append(math.sqrt(dx*dx + dy*dy))
+
+# Steering Range from -100.0 to 100.0
+STEERING_RANGE = 100.0
+
+# vehicle physical parameters
+WHEELBASE_LEN = 0.325
+
+def find_distance_index_based(x, y, plan, idx):
+	x1 = float(plan[idx][0])
+	y1 = float(plan[idx][1])
+	distance = math.sqrt((x1 - x) ** 2 + (y1 - y) ** 2)
+	return distance
+
+def purepursuit_control_node(data):
+    # Main control function for pure pursuit algorithm
+
+    # Create an empty ackermann drive message that we will populate later with the desired steering angle and speed.
+    command = AckermannDrive()
+
+    global wp_seq
+    global curr_polygon
+
+    # Obtain the current position of the race car from the inferred_pose message
+    odom_x = data.pose.position.x
+    odom_y = data.pose.position.y
+
+    # TODO 1: The reference path is stored in the 'plan' array.
+    # Your task is to find the base projection of the car on this reference path.
+    # The base projection is defined as the closest point on the reference path to the car's current position.
+    # Calculate the index and position of this base projection on the reference path.
+    min_dist = float('inf')
+    min_index = 0
+    for index, point in enumerate(plan):
+        dx = odom_x - point[0]
+        dy = odom_y - point[1]
+        distance = math.sqrt(dx*dx + dy*dy)
+        if distance < min_dist:
+            min_dist = distance
+            min_index = index
+
+    base_projection_index = min_index
+    base_projection_point = plan[base_projection_index]
+
+    # Calculate heading angle of the car (in radians)
+    heading = tf.transformations.euler_from_quaternion((data.pose.orientation.x,
+                                                        data.pose.orientation.y,
+                                                        data.pose.orientation.z,
+                                                        data.pose.orientation.w))[2]
+
+    # TODO 2: You need to tune the value of the lookahead_distance
+    lookahead_distance = 2.0  # Adjust this value as needed
+
+    # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
+    # This target point should be determined based on the path and the base projection you have already calculated.
+    # The target point is a specific point on the reference path that the car should aim towards - lookahead distance ahead of the base projection on the reference path.
+    # Calculate the position of this goal/target point along the path.
+    # target_point_index = min(base_projection_index + int(lookahead_distance / sum(path_resolution)), len(plan) - 1)
+    # target_point = plan[target_point_index]
+
+    target_point_index = base_projection_index
+    while find_distance_index_based(odom_x, odom_y, plan, base_projection_index) < lookahead_distance: 
+        target_point_index += 1
+    target_point = plan[target_point_index - 1]
+
+    # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
+    # Your code here
+    # alpha = math.atan2(target_point[1] - odom_y, target_point[0] - odom_x) - heading
+    alpha = math.atan(target_point[1] - odom_y / target_point[0] - odom_x) - heading
+    L = WHEELBASE_LEN
+    # steering_angle = math.atan2(2.0 * L * math.sin(alpha), lookahead_distance)
+    steering_angle = math.atan(2.0 * L * math.sin(alpha) / lookahead_distance)
+
+    # TODO 5: Ensure that the calculated steering angle is within the STEERING_RANGE and assign it to command.steering_angle
+    # Your code here    
+    command.steering_angle = max(-STEERING_RANGE, min(steering_angle, STEERING_RANGE))
+
+    # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
+    curvature = math.tan(command.steering_angle) / WHEELBASE_LEN
+
+    max_speed = 20.0  # Adjust this value as needed
+    min_speed = 5.0   # Adjust this value as needed
+
+    velocity_scaling_factor = max(min_speed / max_speed, 1 - abs(curvature))
+
+    # command.speed = max_speed * velocity_scaling_factor
+    command.speed = 100
+    command_pub.publish(command)
+
+    # Visualization code
+    # Make sure the following variables are properly defined in your TODOs above:
+    # - odom_x, odom_y: Current position of the car
+    # - pose_x, pose_y: Position of the base projection on the reference path
+    # - target_x, target_y: Position of the goal/target point
+
+    # These are set to zero only so that the template code builds. 
+    pose_x = base_projection_point[0]
+    pose_y = base_projection_point[1]
+    target_x = target_point[0]
+    target_y = target_point[1]
+
+    base_link    = Point32()
+    nearest_pose = Point32()
+    nearest_goal = Point32()
+    base_link.x    = odom_x
+    base_link.y    = odom_y
+    nearest_pose.x = pose_x
+    nearest_pose.y = pose_y
+    nearest_goal.x = target_x
+    nearest_goal.y = target_y
+    control_polygon.header.frame_id = frame_id
+    control_polygon.polygon.points  = [nearest_pose, base_link, nearest_goal]
+    control_polygon.header.seq      = wp_seq
+    control_polygon.header.stamp    = rospy.Time.now()
+    wp_seq = wp_seq + 1
+    polygon_pub.publish(control_polygon)
+
+if __name__ == '__main__':
+
+    try:
+
+        rospy.init_node('pure_pursuit', anonymous=True)
+        if not plan:
+            rospy.loginfo('obtaining trajectory')
+            construct_path()
+
+        # This node subscribes to the pose estimate provided by the Particle Filter. 
+        # The message type of that pose message is PoseStamped which belongs to the geometry_msgs ROS package.
+        rospy.Subscriber('/{}/particle_filter/viz/inferred_pose'.format(car_name), PoseStamped, purepursuit_control_node)
+        rospy.spin()
+
+    except rospy.ROSInterruptException:
+
+        pass
