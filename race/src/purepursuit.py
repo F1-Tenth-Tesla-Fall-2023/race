@@ -27,15 +27,15 @@ polygon_pub         = rospy.Publisher('/{}/purepursuit_control/visualize'.format
 global wp_seq
 global curr_polygon
 
-wp_seq = 0
+wp_seq          = 0
 control_polygon = PolygonStamped()
 
 def construct_path():
     # Function to construct the path from a CSV file
     # TODO: Modify this path to match the folder where the csv file containing the path is located.
-    file_path = os.path.expanduser('/path/to/your/csv/file/{}.csv'.format(trajectory_name))
+    file_path = os.path.expanduser('/home/maxwell/catkin_ws/src/f1tenth_purepursuit/path/{}.csv'.format(trajectory_name))
     with open(file_path) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+        csv_reader = csv.reader(csv_file, delimiter = ',')
         for waypoint in csv_reader:
             plan.append(waypoint)
 
@@ -45,21 +45,16 @@ def construct_path():
             plan[index][point] = float(plan[index][point])
 
     for index in range(1, len(plan)):
-        dx = plan[index][0] - plan[index-1][0]
-        dy = plan[index][1] - plan[index-1][1]
-        path_resolution.append(math.sqrt(dx*dx + dy*dy))
+         dx = plan[index][0] - plan[index-1][0]
+         dy = plan[index][1] - plan[index-1][1]
+         path_resolution.append(math.sqrt(dx*dx + dy*dy))
+
 
 # Steering Range from -100.0 to 100.0
 STEERING_RANGE = 100.0
 
 # vehicle physical parameters
-WHEELBASE_LEN = 0.325
-
-def find_distance_index_based(x, y, plan, idx):
-	x1 = float(plan[idx][0])
-	y1 = float(plan[idx][1])
-	distance = math.sqrt((x1 - x) ** 2 + (y1 - y) ** 2)
-	return distance
+WHEELBASE_LEN       = 0.325
 
 def purepursuit_control_node(data):
     # Main control function for pure pursuit algorithm
@@ -74,66 +69,44 @@ def purepursuit_control_node(data):
     odom_x = data.pose.position.x
     odom_y = data.pose.position.y
 
+
     # TODO 1: The reference path is stored in the 'plan' array.
     # Your task is to find the base projection of the car on this reference path.
     # The base projection is defined as the closest point on the reference path to the car's current position.
     # Calculate the index and position of this base projection on the reference path.
-    min_dist = float('inf')
-    min_index = 0
-    for index, point in enumerate(plan):
-        dx = odom_x - point[0]
-        dy = odom_y - point[1]
-        distance = math.sqrt(dx*dx + dy*dy)
-        if distance < min_dist:
-            min_dist = distance
-            min_index = index
+    
+    # Your code here
 
-    base_projection_index = min_index
-    base_projection_point = plan[base_projection_index]
-
+    
     # Calculate heading angle of the car (in radians)
     heading = tf.transformations.euler_from_quaternion((data.pose.orientation.x,
                                                         data.pose.orientation.y,
                                                         data.pose.orientation.z,
                                                         data.pose.orientation.w))[2]
+    
 
     # TODO 2: You need to tune the value of the lookahead_distance
-    lookahead_distance = 2.0  # Adjust this value as needed
+    lookahead_distance = 1.0
+
 
     # TODO 3: Utilizing the base projection found in TODO 1, your next task is to identify the goal or target point for the car.
     # This target point should be determined based on the path and the base projection you have already calculated.
     # The target point is a specific point on the reference path that the car should aim towards - lookahead distance ahead of the base projection on the reference path.
     # Calculate the position of this goal/target point along the path.
-    # target_point_index = min(base_projection_index + int(lookahead_distance / sum(path_resolution)), len(plan) - 1)
-    # target_point = plan[target_point_index]
 
-    target_point_index = base_projection_index
-    while find_distance_index_based(odom_x, odom_y, plan, base_projection_index) < lookahead_distance: 
-        target_point_index += 1
-    target_point = plan[target_point_index - 1]
+    # Your code here
+
 
     # TODO 4: Implement the pure pursuit algorithm to compute the steering angle given the pose of the car, target point, and lookahead distance.
     # Your code here
-    # alpha = math.atan2(target_point[1] - odom_y, target_point[0] - odom_x) - heading
-    alpha = math.atan(target_point[1] - odom_y / target_point[0] - odom_x) - heading
-    L = WHEELBASE_LEN
-    # steering_angle = math.atan2(2.0 * L * math.sin(alpha), lookahead_distance)
-    steering_angle = math.atan(2.0 * L * math.sin(alpha) / lookahead_distance)
+
 
     # TODO 5: Ensure that the calculated steering angle is within the STEERING_RANGE and assign it to command.steering_angle
     # Your code here    
-    command.steering_angle = max(-STEERING_RANGE, min(steering_angle, STEERING_RANGE))
+    command.steering_angle = 0.0
 
     # TODO 6: Implement Dynamic Velocity Scaling instead of a constant speed
-    curvature = math.tan(command.steering_angle) / WHEELBASE_LEN
-
-    max_speed = 20.0  # Adjust this value as needed
-    min_speed = 5.0   # Adjust this value as needed
-
-    velocity_scaling_factor = max(min_speed / max_speed, 1 - abs(curvature))
-
-    # command.speed = max_speed * velocity_scaling_factor
-    command.speed = 100
+    command.speed = 20.0
     command_pub.publish(command)
 
     # Visualization code
@@ -143,10 +116,11 @@ def purepursuit_control_node(data):
     # - target_x, target_y: Position of the goal/target point
 
     # These are set to zero only so that the template code builds. 
-    pose_x = base_projection_point[0]
-    pose_y = base_projection_point[1]
-    target_x = target_point[0]
-    target_y = target_point[1]
+    pose_x=0    
+    pose_y=0
+    target_x=0
+    target_y=0
+
 
     base_link    = Point32()
     nearest_pose = Point32()
@@ -168,12 +142,12 @@ if __name__ == '__main__':
 
     try:
 
-        rospy.init_node('pure_pursuit', anonymous=True)
+        rospy.init_node('pure_pursuit', anonymous = True)
         if not plan:
             rospy.loginfo('obtaining trajectory')
             construct_path()
 
-        # This node subscribes to the pose estimate provided by the Particle Filter. 
+        # This node subsribes to the pose estimate provided by the Particle Filter. 
         # The message type of that pose message is PoseStamped which belongs to the geometry_msgs ROS package.
         rospy.Subscriber('/{}/particle_filter/viz/inferred_pose'.format(car_name), PoseStamped, purepursuit_control_node)
         rospy.spin()
