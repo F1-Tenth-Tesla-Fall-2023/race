@@ -1,0 +1,11 @@
+<?xml version='1.0'?>
+
+<launch>
+
+  <node name = 'pure_pursuit'
+	pkg = 'f1tenth_purepursuit'
+	type = 'pure_pursuit.py'
+	output= 'screen'
+	/>
+
+</launch>
